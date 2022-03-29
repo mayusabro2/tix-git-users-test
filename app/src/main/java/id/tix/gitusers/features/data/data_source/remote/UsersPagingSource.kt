@@ -21,13 +21,8 @@ class UsersPagingSource @Inject constructor(private val service: UserService) : 
     override suspend fun getData(params: LoadParams<Int>): List<User> =
         service.getUsers(since = params.key ?: STARTING_PAGE_INDEX)
 
+    override suspend fun getNextKey(data: List<User>): Int = (data.lastOrNull()?.id?:0).toInt() + 1
 
 
-    override val keyReuseSupported: Boolean = true
-    override fun getRefreshKey(state: PagingState<Int, User>): Int? {
-        return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(PER_PAGE)
-                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(PER_PAGE)
-        }
-    }
+
 }

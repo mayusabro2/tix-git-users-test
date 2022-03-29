@@ -5,7 +5,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import id.tix.gitusers.core.network.Resource
 import id.tix.gitusers.core.network.Resource.*
-import id.tix.gitusers.features.data.data_source.remote.UsersPagingSource.Companion.PER_PAGE
+import id.tix.gitusers.features.domain.entity.model.User
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
@@ -17,7 +17,7 @@ abstract class BasePagingSource<T, V : Any> : PagingSource<Int, V>() {
 
 
     abstract suspend fun getData(params: LoadParams<Int>) : List<V>
-
+    abstract suspend fun getNextKey(data: List<V>): Int
     override fun getRefreshKey(state: PagingState<Int, V>): Int? = state.anchorPosition?.let { anchorPosition ->
         state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
             ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
@@ -34,7 +34,7 @@ abstract class BasePagingSource<T, V : Any> : PagingSource<Int, V>() {
                 } else {
                     // By default, initial load size = 3 * NETWORK PAGE SIZE
                     // ensure we're not requesting duplicating items at the 2nd request
-                    pageIndex + PER_PAGE
+                    getNextKey(data)
                 }
             LoadResult.Page(
                 data = data,

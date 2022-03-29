@@ -17,6 +17,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.paging.PagingData
+import androidx.paging.PagingSource
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,6 +29,7 @@ import id.tix.gitusers.features.presentation.users.UserViewModel
 import id.tix.gitusers.features.presentation.users.adapters.LoadingStateHeaderAdapter
 import id.tix.gitusers.features.presentation.users.adapters.UserAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -42,16 +44,16 @@ class MainActivity : AppCompatActivity() {
         viewModel.userId.value = it?.login?:""
         UserDialog(viewModel).show(supportFragmentManager, "User Detail Dialog")
     }
+    var currentListener: Job? = null
+    lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         binding.lifecycleOwner = this
         binding.swiperRefresh.run {
             setOnRefreshListener {
-                isRefreshing = false
-                pagingAdapter.refresh()
-
+                initListener()
             }
         }
         pagingAdapter.run {
@@ -62,11 +64,19 @@ class MainActivity : AppCompatActivity() {
         }
         binding.adapter = pagingAdapter.withLoadStates()
         setContentView(binding.root)
-        lifecycleScope.launch {
+
+        initListener()
+    }
+
+    fun initListener(){
+        currentListener?.cancel()
+        currentListener = lifecycleScope.launch {
             viewModel.getUsers().collectLatest { pagingData ->
+                binding.swiperRefresh.isRefreshing = false
                 pagingAdapter.submitData(pagingData)
             }
         }
+
     }
 
 

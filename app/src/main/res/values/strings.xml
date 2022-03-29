@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Git Users</string>
+    <string name="retry">Retry</string>
+    <string name="id_text">#%d</string>
+    <string name="photo_profile">Photo Profile</string>
+
+</resources>
